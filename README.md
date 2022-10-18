@@ -25,9 +25,11 @@ Annotated logs after running the above, which show that requests begin completin
      Running `target/debug/proxy`
 TRACE 2022-10-18T17:10:02.684904: mio::poll: registering event source with poller: token=Token(1), interests=READABLE | WRITABLE
  INFO 2022-10-18T17:10:02.685067: proxy: Starting server on 127.0.0.1:3000
+```
 
 First requests arrive at 6.598
 
+```
 TRACE 2022-10-18T17:10:06.598447: mio::poll: registering event source with poller: token=Token(2), interests=READABLE | WRITABLE
 TRACE 2022-10-18T17:10:06.598786: mio::poll: registering event source with poller: token=Token(3), interests=READABLE | WRITABLE
 TRACE 2022-10-18T17:10:06.598990: mio::poll: registering event source with poller: token=Token(4), interests=READABLE | WRITABLE
@@ -124,9 +126,11 @@ TRACE 2022-10-18T17:10:06.632124: mio::poll: registering event source with polle
  INFO 2022-10-18T17:10:06.632284: proxy: Start proxy of GET /32 -> <http://127.0.0.1:3030/32>
 TRACE 2022-10-18T17:10:06.632407: mio::poll: registering event source with poller: token=Token(64), interests=READABLE | WRITABLE
 TRACE 2022-10-18T17:10:06.632439: mio::poll: registering event source with poller: token=Token(65), interests=READABLE | WRITABLE
+```
 
 First results are returned at 6.632, ie. 632 - 598 = 34ms after they began, as would be expected/desired, while new requests (33 to 50) continue to be processed.
 
+```
  INFO 2022-10-18T17:10:06.632972: proxy: Finished proxy of <http://127.0.0.1:3030/1>
 TRACE 2022-10-18T17:10:06.633161: mio::poll: deregistering event source from poller
 TRACE 2022-10-18T17:10:06.633597: mio::poll: deregistering event source from poller
