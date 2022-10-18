@@ -12,7 +12,7 @@ and the proxy server in another terminal:
 RUST_LOG=info,mio=trace cargo run --bin proxy
 ```
 
-and then hit the proxy server with 50 requests simultaneously (or close enough, though perhaps this is the issue: maybe the 33rd curl statement isn't being run until after 30ms - need to verify)
+and then hit the proxy server with 50 requests simultaneously (EDIT: they are not close enough - printing the `date -uIns` inside the `do` below shows that at it takes over 30ms to *begin* 20-30 curls... so need to find another way to do them simultanously here).
 
 ```bash
 for i in {1..50}; do curl "http://127.0.0.1:3000/${i}" & ; done
