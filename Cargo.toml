@@ -1,0 +1,15 @@
+[package]
+name = "tokio-hyper-test"
+version = "0.1.0"
+edition = "2021"
+default-run = "proxy"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+chrono = "0.4.22"
+env_logger = "0.9.1"
+hyper = { version = "0.14", features = ["full"] }
+log = "0.4.17"
+tokio = { version = "1", features = ["full"] }
+
