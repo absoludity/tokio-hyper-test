@@ -12,13 +12,19 @@ and the proxy server in another terminal:
 RUST_LOG=info,mio=trace cargo run --bin proxy
 ```
 
-and then hit the proxy server with 50 requests simultaneously (EDIT: they are not close enough - printing the `date -uIns` inside the `do` below shows that at it takes over 30ms to *begin* 20-30 curls... so need to find another way to do them simultanously here).
+and then hit the proxy server with 50 requests simultaneously by running
 
 ```bash
-for i in {1..50}; do curl "http://127.0.0.1:3000/${i}" & ; done
+RUST_LOG=info cargo run --bin fire
 ```
 
 Annotated logs after running the above, which show that requests begin completing as expected after 30ms or so, before the 33rd request has even begun being proxied (though as above, yet to confirm if this is because the curl command hasn't completed - I'll `time` it shortly.)
+
+## Conclusion
+
+By adding a small amount of CPU-blocking code within each task before the proxied request, and starving the available CPUs (by updating the tokio::main), I'm able to reproduce the problem (as you'd expect by doing as much). So now heading back to profile the code in the original issue.
+
+Various annotated logs below.
 
 ```
    Compiling tokio-hyper-test v0.1.0 (/home/michael/dev/vmware/tokio-hyper-test)
