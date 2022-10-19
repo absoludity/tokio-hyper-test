@@ -1,13 +1,24 @@
 use chrono::Local;
+use env_logger::fmt::Color;
+use hyper::service::{make_service_fn, service_fn};
+use hyper::{Body, Client, Request, Response, Server, StatusCode};
+use log::{info, Level};
 use std::convert::Infallible;
 use std::io::Write;
 use std::net::SocketAddr;
-use hyper::{Client, Body, Request, Response, Server, StatusCode};
-use hyper::service::{make_service_fn, service_fn};
-use log::{info, Level};
-use env_logger::fmt::Color;
 
 const DOWNSTREAM_URI: &str = "http://127.0.0.1:3030";
+const CPU_BLOCK_MILLIS: i64 = 100;
+
+fn block(ms: i64) {
+    let start = Local::now();
+    loop {
+        let elapsed = Local::now() - start;
+        if elapsed.num_milliseconds() >= ms {
+            break;
+        }
+    }
+}
 
 async fn proxy(req: Request<Body>) -> Result<Response<Body>, Infallible> {
     let client = Client::new();
@@ -15,13 +26,28 @@ async fn proxy(req: Request<Body>) -> Result<Response<Body>, Infallible> {
     let req_proxy = Request::builder()
         .uri(proxy_uri.clone())
         .method(req.method())
-        .body(Body::from("")).unwrap();
+        .body(Body::from(""))
+        .unwrap();
 
-    info!("Start proxy of {} {} -> {}", req.method(), req.uri(), req_proxy.uri());
+    info!(
+        "Start proxy of {} {} -> {}",
+        req.method(),
+        req.uri(),
+        req_proxy.uri()
+    );
+    block(CPU_BLOCK_MILLIS);
+    info!(
+        "Blocked with CPU for {CPU_BLOCK_MILLIS}ms for {} {} -> {}",
+        req.method(),
+        req.uri(),
+        req_proxy.uri()
+    );
+
     let response = client.request(req_proxy).await.or_else(|r| {
         let response = Response::builder()
             .status(StatusCode::INTERNAL_SERVER_ERROR)
-            .body(format!("Error proxying request {}", r).into()).unwrap();
+            .body(format!("Error proxying request {}", r).into())
+            .unwrap();
         Ok(response)
     });
     info!("Finished proxy of {}", proxy_uri);
@@ -59,14 +85,12 @@ fn setup_logger() {
         .init();
 }
 
-#[tokio::main]
+#[tokio::main(flavor = "multi_thread", worker_threads = 1)]
 async fn main() {
     setup_logger();
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
 
-    let make_svc = make_service_fn(|_conn| async {
-        Ok::<_, Infallible>(service_fn(proxy))
-    });
+    let make_svc = make_service_fn(|_conn| async { Ok::<_, Infallible>(service_fn(proxy)) });
 
     let server = Server::bind(&addr).serve(make_svc);
 
